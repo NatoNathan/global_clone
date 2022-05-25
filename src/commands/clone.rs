@@ -92,9 +92,9 @@ pub fn command(args: CliArgs, config: AppConfig) {
         });
     } else {
         trace!("using http");
-        callbacks.credentials(|_url, username_from_url, _allowed_types| {
-            CredentialHelper::
-        });
+        // callbacks.credentials(|_url, username_from_url, _allowed_types| {
+        //     CredentialHelper::
+        // });
 
     }
     // Prepare fetch options.
