@@ -50,6 +50,7 @@ struct RepoMeta {
     repo: String,
     owner: String,
     provider: String,
+    host: String,
 }
 
 pub fn command(
@@ -145,7 +146,7 @@ fn build_repo_path(repo: &String ,repo_type: &RepoType, ssh: &bool, repo_meta: &
             let ssh_url = format!(
                 "{}@{}:{}/{}.git",
                 &username.unwrap_or_else(|| String::from("git")),
-                &repo_meta.provider,
+                &repo_meta.host,
                 &repo_meta.owner,
                 &repo_meta.repo.replace(".git", "")
             );
@@ -167,6 +168,7 @@ fn get_repo_meta(repo_path: &str, repo_type: &RepoType) -> RepoMeta {
                 repo: repo_path_split[1].to_string(),
                 owner: repo_path_split[0].to_string(),
                 provider: "github".to_string(),
+                host: "github.com".to_string(),
             }
         }
         RepoType::Http => {
@@ -178,6 +180,7 @@ fn get_repo_meta(repo_path: &str, repo_type: &RepoType) -> RepoMeta {
                 repo: repo_path_split[2].to_string().replace(".git", ""),
                 owner: repo_path_split[1].to_string(),
                 provider: domain[1].to_string(),
+                host: domain[0].to_string(),
             }
         }
         RepoType::Ssh => {
@@ -189,6 +192,7 @@ fn get_repo_meta(repo_path: &str, repo_type: &RepoType) -> RepoMeta {
                 repo: repo_split[1].to_string().replace(".git", ""),
                 owner: repo_split[0].to_string(),
                 provider: domain[1].to_string(),
+                host: domain[0].to_string(),
             }
         }
     }
