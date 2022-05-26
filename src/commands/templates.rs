@@ -73,9 +73,9 @@ fn list(config:AppConfig ) {
 
 fn add(args:AddArgs,mut config:AppConfig ) {
   trace!("Templates:Add");
-  let mut name: String = args.name.unwrap_or("".into());
-  let mut template:String = args.template.unwrap_or("".into());
-  if name == "".to_string() {
+  let mut name: String = args.name.unwrap_or_default();
+  let mut template:String = args.template.unwrap_or_default();
+  if name == *"" {
     trace!("No name or template provided, asking user instead");
     name = Input::<String>::new()
       .with_prompt("Enter the Template Name")
@@ -104,8 +104,8 @@ fn add(args:AddArgs,mut config:AppConfig ) {
 
 fn remove(args: RemoveArgs, mut config: AppConfig) {
   trace!("Templates:Remove");
-  let mut name: String = args.name.unwrap_or("".into());
-  if name == "".to_string() {
+  let mut name: String = args.name.unwrap_or_default();
+  if name == *"" {
     trace!("name not provided asking user to pick instead");
     let options: Vec<String> = config.templates.clone().into_keys().collect();
     let selection = Select::with_theme(&ColorfulTheme::default())

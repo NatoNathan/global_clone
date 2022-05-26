@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand};
-use pretty_env_logger;
 use clap_verbosity_flag::{Verbosity, InfoLevel};
 #[macro_use] extern crate prettytable;
 

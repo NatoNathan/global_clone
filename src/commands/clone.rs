@@ -1,9 +1,11 @@
 use crate::config;
 use clap::Args;
 use config::AppConfig;
-use log::{debug, trace, warn, info};
+use log::trace;
+use log::info;
 
-use git2::{Cred, RemoteCallbacks, CredentialHelper};
+
+use git2::{Cred, RemoteCallbacks};
 use std::env;
 use std::path::Path;
 
@@ -63,15 +65,13 @@ pub fn command(args: CliArgs, config: AppConfig) {
         repo_meta.owner,
         repo_meta.provider
     );
+
     let repo_path = match (&repo_type, &args.ssh) {
         (RepoType::Github, true )=> format!("git@github.com:{}.git", &args.repo),
         (RepoType::Github, false)=> format!("https://github.com/{}", &args.repo),
         (_, false) => args.repo,
         (_, true) => {
-            let mut ssh_url = format!("git@{}:{}/{}.git", &repo_meta.provider, &repo_meta.owner, &repo_meta.repo);
-            if let Some(username) = &args.ssh_username {
-                ssh_url = format!("{}:{}@{}", username, &args.ssh_password.unwrap(), ssh_url);
-            }
+            let ssh_url = format!("{}@{}:{}/{}.git", &args.ssh_username.unwrap_or_else(|| String::from("git")) ,&repo_meta.provider, &repo_meta.owner, &repo_meta.repo.replace(".git", ""));
             trace!("ssh_url: {}", ssh_url);
             ssh_url
         }
@@ -79,16 +79,27 @@ pub fn command(args: CliArgs, config: AppConfig) {
 
     trace!("getting target path");
     let target_template = config.templates.get(&args.template).unwrap();
-    let target_path = build_target_path(&target_template, &repo_meta);
+    let target_path = build_target_path(target_template, &repo_meta);
     trace!("target_path: {}", target_path);
 
     let mut callbacks = RemoteCallbacks::new();
     if matches!(repo_type, RepoType::Ssh) || args.ssh {
-        warn!("ssh clone is currently not supported");
+        trace!("ssh clone is currently not supported");
         trace!("using ssh");
         trace!("ssh_key: {}", args.ssh_key);
         callbacks.credentials(|_url, username_from_url, _allowed_types| {
-            Cred::ssh_key_from_agent(username_from_url.unwrap())
+            if args.ssh {
+                trace!("Using `Cred::ssh_key`");
+                Cred::ssh_key(
+                    username_from_url.unwrap(),
+                    None, 
+                    Path::new(&args.ssh_key),
+                    args.ssh_password.as_ref().map(|p| p.as_ref())
+                )
+            } else {
+                trace!("Using `Cred::ssh_key_from_agent`");
+                Cred::ssh_key_from_agent(username_from_url.unwrap())
+            }
         });
     } else {
         trace!("using http");
@@ -117,11 +128,11 @@ pub fn command(args: CliArgs, config: AppConfig) {
     .unwrap();
 }
 
-fn build_target_path(template_str: &String, repo_meta: &RepoMeta) -> String {
-    let mut target_path = template_str.clone();
-    target_path = target_path.replace("~", env::var("HOME").unwrap().as_str());
+fn build_target_path(template_str: &str, repo_meta: &RepoMeta) -> String {
+    let mut target_path = String::from(template_str);
+    target_path = target_path.replace('~', env::var("HOME").unwrap().as_str());
     let re = Regex::new(r"\{(.*?)\}").unwrap();
-    let captures = re.captures_iter(&template_str).collect::<Vec<_>>();
+    let captures = re.captures_iter(template_str).collect::<Vec<_>>();
     for cap in captures {
         let key = cap.get(1).unwrap().as_str();
         let value = match key {
@@ -130,7 +141,7 @@ fn build_target_path(template_str: &String, repo_meta: &RepoMeta) -> String {
             "provider" => repo_meta.provider.clone(),
             _ => "".to_string(),
         };
-        target_path = target_path.replace(&cap.get(0).unwrap().as_str(), &value);
+        target_path = target_path.replace(&cap.get(0).unwrap().as_str(), &value)
     }
     target_path
 }
@@ -154,13 +165,13 @@ fn build_target_path(template_str: &String, repo_meta: &RepoMeta) -> String {
 /// owner: "nato-nathan",
 /// provider: "github"
 /// }
-fn get_repo_meta(repo_path: &String, repo_type: &RepoType) -> RepoMeta {
+fn get_repo_meta(repo_path: &str, repo_type: &RepoType) -> RepoMeta {
     let re =
         Regex::new(r"([\da-z](?:[\da-z-]{0,61}[\da-z])?)\.+[\da-z][\da-z-]{0,61}[\da-z]").unwrap();
     match &repo_type {
         RepoType::Github => {
             trace!("RepoType::Github");
-            let repo_path_split: Vec<&str> = repo_path.split("/").collect();
+            let repo_path_split: Vec<&str> = repo_path.split('/').collect();
             RepoMeta {
                 repo: repo_path_split[1].to_string(),
                 owner: repo_path_split[0].to_string(),
@@ -170,7 +181,7 @@ fn get_repo_meta(repo_path: &String, repo_type: &RepoType) -> RepoMeta {
         RepoType::Http => {
             trace!("RepoType::Http");
             let path = repo_path.replace("https://", "");
-            let repo_path_split: Vec<&str> = path.split("/").collect();
+            let repo_path_split: Vec<&str> = path.split('/').collect();
             let domain = re.captures(repo_path_split[0]).unwrap();
             RepoMeta {
                 repo: repo_path_split[2].to_string(),
@@ -180,8 +191,8 @@ fn get_repo_meta(repo_path: &String, repo_type: &RepoType) -> RepoMeta {
         }
         RepoType::Ssh => {
             trace!("RepoType::Ssh");
-            let repo_path_split: Vec<&str> = repo_path.split(":").collect();
-            let repo_split: Vec<&str> = repo_path_split[1].split("/").collect();
+            let repo_path_split: Vec<&str> = repo_path.split(':').collect();
+            let repo_split: Vec<&str> = repo_path_split[1].split('/').collect();
             let domain = re.captures(repo_path_split[0]).unwrap();
             RepoMeta {
                 repo: repo_split[1].to_string(),
@@ -193,10 +204,10 @@ fn get_repo_meta(repo_path: &String, repo_type: &RepoType) -> RepoMeta {
 }
 
 /// get the repo type from the repo path
-fn get_repo_type(repo_path: &String) -> RepoType {
+fn get_repo_type(repo_path: &str) -> RepoType {
     if repo_path.contains("http") {
         RepoType::Http
-    } else if repo_path.contains("@") {
+    } else if repo_path.contains('@') {
         RepoType::Ssh
     } else {
         RepoType::Github
