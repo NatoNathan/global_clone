@@ -22,7 +22,7 @@ pub struct CliArgs {
     #[clap(long, group = "ssh_clone")]
     ssh: bool,
     /// ssh key path, (requires --ssh)
-    #[clap(short='k', long,requires = "ssh_clone" ,default_value_t = format!("{}/.ssh/id_rsa", env::var("HOME").unwrap_or("".into())) )]
+    #[clap(short='k', long,requires = "ssh_clone" ,default_value_t = ssh_key_scan() )]
     ssh_key: String,
     /// ssh username, (requires --ssh)
     #[clap(short = 'u', long, requires = "ssh_clone")]
@@ -76,7 +76,7 @@ pub fn command(
 
     if dry_run {
         info!("dry run, not cloning");
-        info!("dry run: clonning {} to {}, using {}", repo_path, target_path, &args.template);
+        info!("dry run: cloning {} to {}, using {}", repo_path, target_path, &args.template);
         return Ok(());
     }
 
@@ -121,7 +121,9 @@ pub fn command(
 
 fn build_target_path(template_str: &str, repo_meta: &RepoMeta) -> String {
     let mut target_path = String::from(template_str);
-    target_path = target_path.replace('~', env::var("HOME").unwrap().as_str());
+    if cfg!(target_family = "unix") {
+        target_path = target_path.replace('~', env::var("HOME").unwrap().as_str());
+    } 
     let re = Regex::new(r"\{(.*?)\}").unwrap();
     let captures = re.captures_iter(template_str).collect::<Vec<_>>();
     for cap in captures {
@@ -234,5 +236,45 @@ fn get_credentials_callback(
             trace!("using http");
             Cred::default()
         }
+    }
+}
+
+
+/// get default ssh key path on unix systems
+#[cfg(target_family = "unix")]
+fn get_default_ssh_key_path() -> String {
+    let mut ssh_dir = env::var("HOME").unwrap();
+    ssh_dir.push_str("/.ssh/");
+    ssh_dir
+}
+/// get default ssh key path on windows systems
+#[cfg(target_family = "windows")]
+fn get_default_ssh_key_path() -> String {
+    let mut ssh_dir = env::var("HOMEDRIVE").unwrap();
+    ssh_dir.push_str(&env::var("HOMEPATH").unwrap());
+    ssh_dir.push_str("\\.ssh\\");
+    ssh_dir
+}
+
+/// Scan for ssh keys in the default ssh directory
+/// and return the first one found
+fn ssh_key_scan() -> String {
+    let ssh_dir = get_default_ssh_key_path();
+    let mut keys = Vec::new();
+    let re = Regex::new(r"(.*)\.pub").unwrap();
+    for entry in std::fs::read_dir(&ssh_dir).unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        if path.is_file() {
+            let path_str = path.to_str().unwrap();
+            if re.is_match(path_str) {
+                keys.push(path_str.to_string());
+            }
+        }
+    }
+    if keys.len() > 0 {
+        keys[0].clone().replace(".pub", "")
+    } else {
+        panic!("No ssh keys found in {}", ssh_dir);
     }
 }
