@@ -22,7 +22,7 @@ pub struct CliArgs {
     #[clap(long, group = "ssh_clone")]
     ssh: bool,
     /// ssh key path, (requires --ssh)
-    #[clap(short='k', long,requires = "ssh_clone" ,default_value_t = format!("{}/.ssh/id_rsa", env::var("HOME").unwrap()) )]
+    #[clap(short='k', long,requires = "ssh_clone" ,default_value_t = format!("{}/.ssh/id_rsa", env::var("HOME").unwrap_or("".into())) )]
     ssh_key: String,
     /// ssh username, (requires --ssh)
     #[clap(short = 'u', long, requires = "ssh_clone")]
