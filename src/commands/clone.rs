@@ -243,6 +243,7 @@ fn get_credentials_callback(
 /// get default ssh key path on unix systems
 #[cfg(target_family = "unix")]
 fn get_default_ssh_key_path() -> String {
+    trace!("get_default_ssh_key_path (unix)");
     let mut ssh_dir = env::var("HOME").unwrap();
     ssh_dir.push_str("/.ssh/");
     ssh_dir
@@ -250,6 +251,7 @@ fn get_default_ssh_key_path() -> String {
 /// get default ssh key path on windows systems
 #[cfg(target_family = "windows")]
 fn get_default_ssh_key_path() -> String {
+    trace!("get_default_ssh_key_path (windows)");
     let mut ssh_dir = env::var("HOMEDRIVE").unwrap();
     ssh_dir.push_str(&env::var("HOMEPATH").unwrap());
     ssh_dir.push_str("\\.ssh\\");
@@ -259,6 +261,7 @@ fn get_default_ssh_key_path() -> String {
 /// Scan for ssh keys in the default ssh directory
 /// and return the first one found
 fn ssh_key_scan() -> String {
+    trace!("ssh_key_scan");
     let ssh_dir = get_default_ssh_key_path();
     let mut keys = Vec::new();
     let re = Regex::new(r"(.*)\.pub").unwrap();
@@ -268,11 +271,14 @@ fn ssh_key_scan() -> String {
         if path.is_file() {
             let path_str = path.to_str().unwrap();
             if re.is_match(path_str) {
+                trace!("found key: {}", path_str);
                 keys.push(path_str.to_string());
             }
         }
     }
     if keys.len() > 0 {
+        trace!("found keys: {:?}", keys);
+        trace!("using key: {}", keys[0]);
         keys[0].clone().replace(".pub", "")
     } else {
         panic!("No ssh keys found in {}", ssh_dir);
