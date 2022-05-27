@@ -81,6 +81,13 @@ pub fn command(
         return Ok(());
     }
 
+    
+    if !check_sh_availability() {
+        warn!("sh not available, aborting");
+        return Ok(());
+    }
+
+
     let mut callbacks = RemoteCallbacks::new();
 
 
@@ -116,6 +123,7 @@ pub fn command(
         builder.branch(args.branch.unwrap().as_str());
     }
     builder.clone(repo_path.as_str(), Path::new(target_path.as_str()))?;
+    
     
     progress_spinner.finish_with_message("Finished cloning");
     Ok(())
@@ -303,4 +311,27 @@ fn ssh_key_scan() -> String {
     } else {
         panic!("No ssh keys found in {}", ssh_dir);
     }
+}
+
+/// On Windows, check if `sh` is available. ie on the PATH.
+/// 
+/// If not, warn the user and return false.
+#[cfg(target_family = "windows")]
+fn check_sh_availability() -> bool {
+    trace!("check_sh_availability");
+    let output = std::process::Command::new("sh").output().unwrap();
+    if output.status.success() {
+        true
+    } else {
+        warn!("sh is not available on your system.\n\n");
+        warn!("Please ensure that sh is available on your PATH.\n");
+        warn!("you can use `git bash` or Alternatively use SSH keys.\n");
+        false
+    }
+}
+/// On Unix, return true.
+#[cfg(target_family = "unix")]
+fn check_sh_availability() -> bool {
+    trace!("check_sh_availability");
+    true
 }
