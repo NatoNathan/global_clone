@@ -6,6 +6,7 @@ use log::info;
 use log::trace;
 
 use git2::{Cred, RemoteCallbacks};
+use log::warn;
 use std::env;
 use std::path::Path;
 
@@ -84,13 +85,14 @@ pub fn command(
 
 
     // set up credentials for private repos
-    callbacks.credentials(|_, username_from_url, _| {
+    callbacks.credentials(|url, username_from_url, _| {
         get_credentials_callback(
             &repo_type,
             username_from_url.unwrap_or("git"),
             args.ssh,
             args.ssh_key.clone(),
             args.ssh_password.clone(),
+            url,
         )
     });
 
@@ -217,6 +219,7 @@ fn get_credentials_callback(
     ssh: bool,
     ssh_key: String,
     ssh_password: Option<String>,
+    url: &str,
 ) -> Result<Cred, git2::Error> {
 
     trace!("get_credentials_callback");
@@ -224,6 +227,15 @@ fn get_credentials_callback(
     match (&repo_type, &ssh) {
         (RepoType::Ssh, true) => {
             trace!("using ssh");
+
+            // Warning: On windows, the key must be in the RSA format.
+            // looks to be a bug in libssh2
+            // See: https://github.com/rust-lang/git2-rs/issues/659#issuecomment-757527900
+            // warn on windows
+            if cfg!(target_family = "windows") {
+                warn!("On windows, the key must be in the RSA format.");
+            }
+
             Cred::ssh_key(
                 username, // username
                 None,
@@ -237,7 +249,12 @@ fn get_credentials_callback(
         }
         _ => {
             trace!("using http");
-            Cred::default()
+            let local_git_config = git2::Config::open_default()?;
+            Cred::credential_helper(
+                &local_git_config,
+                url,
+                Some(username),
+            )
         }
     }
 }
