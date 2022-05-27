@@ -218,6 +218,9 @@ fn get_credentials_callback(
     ssh_key: String,
     ssh_password: Option<String>,
 ) -> Result<Cred, git2::Error> {
+
+    trace!("get_credentials_callback");
+    trace!("ssh_key: {}", ssh_key);
     match (&repo_type, &ssh) {
         (RepoType::Ssh, true) => {
             trace!("using ssh");
