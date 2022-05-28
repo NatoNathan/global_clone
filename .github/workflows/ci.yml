@@ -37,7 +37,7 @@ jobs:
     name: Release Build (${{ matrix.os }})
     if: startsWith(github.ref, 'refs/tags/v')
     env:
-      ARTIFACTS_DIR: ${{ matrix.file_name }}/
+      ARTIFACTS_DIR: ${{ matrix.file_name }}
     strategy:
       matrix:
         include:
@@ -63,22 +63,22 @@ jobs:
       # prepare release artifacts
       - name: make temp dir
         run: |
-          mkdir ${{ env.ARTIFACTS_DIR }}
+          mkdir $ARTIFACTS_DIR
       - name: copy artifacts
         run: |
-          cp target/release/global_clone ${{ env.ARTIFACTS_DIR }}global_clone
-          cp README.md ${{ env.ARTIFACTS_DIR }}README.md
-          cp LICENSE ${{ env.ARTIFACTS_DIR }}LICENSE
+          cp target/release/global_clone $ARTIFACTS_DIR/global_clone
+          cp README.md $ARTIFACTS_DIR/README.md
+          cp LICENSE $ARTIFACTS_DIR/LICENSE
       - name: ad-hoc codesign if macos
         if: matrix.os == 'macos-latest'
-        run: codesign -s - ${{ env.ARTIFACTS_DIR }}global_clone
+        run: codesign -s - $ARTIFACTS_DIR/global_clone
       - name: Prepare Release Tarball
-        run: tar czf ${{ matrix.target }}_${{ github.ref_name }}.tar.gz ${{ env.ARTIFACTS_DIR }}
+        run: tar czf $ARTIFACTS_DIR.tar.gz $ARTIFACTS_DIR
       - name: Upload Release Tarball
         uses: actions/upload-artifact@v3
         with:
           name: global_clone_${{ github.ref_name }}
-          path: ${{ matrix.file_name }}.tar.gz
+          path: ${{ env.ARTIFACTS_DIR }}.tar.gz
 
   build_win:
     # only run on a version tag
