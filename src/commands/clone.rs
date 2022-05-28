@@ -319,14 +319,13 @@ fn ssh_key_scan() -> String {
 #[cfg(target_family = "windows")]
 fn check_sh_availability() -> bool {
     trace!("check_sh_availability");
-    let output = std::process::Command::new("sh").output().unwrap();
-    if output.status.success() {
-        true
-    } else {
-        warn!("sh is not available on your system.\n\n");
-        warn!("Please ensure that sh is available on your PATH.\n");
-        warn!("you can use `git bash` or Alternatively use SSH keys.\n");
-        false
+    let output = std::process::Command::new("sh").output();
+    match output {
+        Ok(output) if output.status.success() => true,
+        _ => {
+            warn!("sh is not available on your system.");
+            false
+        }
     }
 }
 /// On Unix, return true.
