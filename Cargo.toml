@@ -7,7 +7,7 @@ readme = "README.md"
 homepage = "https://github.com/natonathan/global_clone"
 repository = "https://github.com/natonathan/global_clone"
 license = "MIT"
-author = "N,Tamez <nat@tamez.email>"
+authors = ["N,Tamez <nat@tamez.email>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
