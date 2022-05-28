@@ -48,7 +48,7 @@ jobs:
           - os: macos-latest
             toolchain: stable
             target: x86_64-apple-darwin
-            file_name: global_clone_macos_amd64.tar.gz
+            file_name: global_clone_macos_amd64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: global_clone_${{ github.ref_name }}
-          path: ${{ matrix.target }}.tar.gz
+          path: $ARTIFACTS_DIR.tar.gz
 
   build_win:
     # only run on a version tag
@@ -120,14 +120,14 @@ jobs:
             target: x86_64-unknown-linux-musl
             pm: Debian
             pm_crate: cargo-deb
-            pm_build_cmd: cargo deb --output artifacts/deb/
+            pm_build_cmd: cargo deb --output artifacts/deb/global_clone_linux_amd64.deb
             package_path: artifacts/deb/global_clone_linux_amd64.deb
           - os: ubuntu-latest
             toolchain: stable
             target: x86_64-unknown-linux-musl
             pm: RPM
             pm_crate: cargo-rpm
-            pm_build_cmd: cargo rpm build --output artifacts/rpm/
+            pm_build_cmd: cargo rpm build --output artifacts/rpm/global_clone_linux_amd64.rpm
             package_path: artifacts/rpm/global_clone_linux_amd64.rpm
     runs-on: ${{ matrix.os }}
     steps:
