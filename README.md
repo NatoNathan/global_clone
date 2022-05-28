@@ -37,7 +37,7 @@ tar -xvf global_clone_macos_amd64.tar.gz
 sudo cp global_clone_macos_amd64/global_clone /usr/local/bin/global_clone
 ```
 
-- Windows (amd64): Download and move to the appropriate directory (e.g. C:\Program Files\global_clone) so it's on the PATH.
+- Windows (amd64): Download [here](https://github.com/natonathan/global_clone/releases/latest/download/global_clone.exe) and move to the appropriate directory (e.g. C:\Program Files\global_clone) so it's on the PATH.
 
 ## Usage
 
