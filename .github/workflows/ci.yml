@@ -163,9 +163,7 @@ jobs:
         with:
           crate: cargo-rpm
           version: latest
-      - uses: actions-rs/cargo@v1
-        with:
-          command: rpm build
+      - run: cargo rpm build
       - name: Rename RPM Package
         run: |
           mv target/release/rpmbuild/RPMs/*.rpm global_clone_${{ github.ref_name }}_x86_64.rpm
