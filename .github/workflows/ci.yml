@@ -35,7 +35,7 @@ jobs:
     # only run on a version tag
     needs: [test]
     name: Release Build (${{ matrix.os }})
-    if: ${{ github.event_name == "push" && github.ref.match(/^refs\/tags\/v.*/) }}
+    if: github.event_name == 'push' && github.ref.match(/^refs\/tags\/v.*/)
     strategy:
       matrix:
         include:
@@ -77,7 +77,7 @@ jobs:
     # only run on a version tag
     needs: [test]
     name: Release Build (${{ matrix.os }})
-    if: ${{ github.event_name == "push" && github.ref.match(/^refs\/tags\/v.*/) }}
+    if: github.event_name == 'push' && github.ref.match(/^refs\/tags\/v.*/)
     strategy:
       matrix:
         include:
@@ -115,7 +115,7 @@ jobs:
   build_deb:
     needs: [test]
     name: Debian Build (${{ matrix.os }})
-    if: ${{ github.event_name == "push" && github.ref.match(/^refs\/tags\/v.*/) }}
+    if: github.event_name == 'push' && github.ref.match(/^refs\/tags\/v.*/)
     strategy:
       matrix:
         include:
@@ -145,7 +145,7 @@ jobs:
   build_rpm:
     needs: [test]
     name: RPM Build (${{ matrix.os }})
-    if: ${{ github.event_name == "push" && github.ref.match(/^refs\/tags\/v.*/) }}
+    if: github.event_name == 'push' && github.ref.match(/^refs\/tags\/v.*/) 
     strategy:
       matrix:
         include:
@@ -178,7 +178,7 @@ jobs:
   release:
     needs: [build_unix, build_win, build_deb, build_rpm]
     name: Release ( ${{ github.ref_name }} )
-    if: ${{ github.event_name == "push" && github.ref.match(/^refs\/tags\/v.*/) }}
+    if: github.event_name == 'push' && github.ref.match(/^refs\/tags\/v.*/)
     runs-on: ubuntu-latest
     steps:
       - name: make temp dir
