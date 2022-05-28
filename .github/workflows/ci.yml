@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: global_clone_${{ github.ref_name }}
-          path: $ARTIFACTS_DIR.tar.gz
+          path: ${{ env.ARTIFACTS_DIR }}.tar.gz
 
   build_win:
     # only run on a version tag
