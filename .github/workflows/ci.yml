@@ -65,6 +65,10 @@ jobs:
           cp target/release/global_clone artifacts/global_clone
           cp README.md artifacts/README.md
           cp LICENSE artifacts/LICENSE
+      - name: ad-hoc codesign if macos
+        if: ${{ matrix.os }} == macos-latest
+        run: |
+          codesign -s - artifacts/global_clone
       - name: Prepare Release Tarball
         run: tar czf ${{ matrix.target }}_${{ github.ref_name }}.tar.gz artifacts
       - name: Upload Release Tarball
@@ -118,15 +122,18 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        toolchain: [stable]
-        target: [x86_64-unknown-linux-musl]
         include:
-          - pm: Debian
+          - os: ubuntu-latest
+            toolchain: stable
+            target: x86_64-unknown-linux-musl
+            pm: Debian
             pm_crate: cargo-deb
             pm_build_cmd: cargo deb --output artifacts/deb/
             package_path: artifacts/deb/
-          - pm: RPM
+          - os: ubuntu-latest
+            toolchain: stable
+            target: x86_64-unknown-linux-musl
+            pm: RPM
             pm_crate: cargo-rpm
             pm_build_cmd: cargo rpm build --output artifacts/rpm/
             package_path: artifacts/rpm/
