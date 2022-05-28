@@ -6,7 +6,6 @@ description = "Global_clone is a tool for cloning a repository to templated path
 readme = "README.md"
 homepage = "https://github.com/natonathan/global_clone"
 repository = "https://github.com/natonathan/global_clone"
-license-file = "LICENSE"
 license = "MIT"
 author = "N,Tamez <nat@tamez.email>"
 
