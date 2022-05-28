@@ -70,7 +70,7 @@ jobs:
           cp README.md $ARTIFACTS_DIR/README.md
           cp LICENSE $ARTIFACTS_DIR/LICENSE
       - name: ad-hoc codesign if macos
-        if: matrix.os == macos-latest
+        if: matrix.os == 'macos-latest'
         run: codesign -s - $ARTIFACTS_DIR/global_clone
       - name: Prepare Release Tarball
         run: tar czf ${{ matrix.target }}_${{ github.ref_name }}.tar.gz $ARTIFACTS_DIR
