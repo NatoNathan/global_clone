@@ -1,0 +1,196 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/*
+    tags:
+      - "v**"
+  pull_request:
+  
+
+
+jobs:
+  test:
+    name: Test (${{ matrix.os}})
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04 windows-2022, macos-11, macos-12]
+        toolchain: [stable]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+  
+  build_unix:
+    # only run on a version tag
+    needs: [test]
+    name: Release Build (${{ matrix.os }})
+    if: ${{ github.event_name == "push" && github.ref.match(/^refs\/tags\/v.*/) }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            toolchain: stable
+            target: x86_64-unknown-linux-musl
+          - os: macos-latest
+            toolchain: stable
+            target: x86_64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          target: ${{ matrix.target }}
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+      # prepare release artifacts
+      - name: make temp dir
+        run: |
+          mkdir artifacts
+      - name: copy artifacts
+        run: |
+          cp target/release/global_clone artifacts/global_clone
+          cp README.md artifacts/README.md
+          cp LICENSE artifacts/LICENSE
+      - name: Prepare Release Tarball
+        run: tar czf ${{ matrix.target }}_${{ github.ref_name }}.tar.gz target/release
+      - name: Upload Release Tarball
+        uses: actions/upload-artifact@v3
+        with:
+          name: global_clone_${{ github.ref_name }}
+          path: ${{ matrix.target }}_${{ github.ref_name }}.tar.gz
+
+  build_win:
+    # only run on a version tag
+    needs: [test]
+    name: Release Build (${{ matrix.os }})
+    if: ${{ github.event_name == "push" && github.ref.match(/^refs\/tags\/v.*/) }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            toolchain: stable
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          target: ${{ matrix.target }}
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+      # prepare release artifacts
+      - name: make temp dir
+        run: |
+          mkdir artifacts
+      - name: copy artifacts
+        run: |
+          Copy-Item target/release/global_clone.exe artifacts/global_clone.exe
+          Copy-Item README.md artifacts/README.md
+          Copy-Item LICENSE artifacts/LICENSE
+      - name: Prepare Release Tarball
+        run: tar czf ${{ matrix.target }}_${{ github.ref_name }}.tar.gz target/release
+      - name: Upload Release Tarball
+        uses: actions/upload-artifact@v3
+        with:
+          name: global_clone_${{ github.ref_name }}
+          path: ${{ matrix.target }}_${{ github.ref_name }}.tar.gz
+
+  build_deb:
+    needs: [test]
+    name: Debian Build (${{ matrix.os }})
+    if: ${{ github.event_name == "push" && github.ref.match(/^refs\/tags\/v.*/) }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            toolchain: stable
+            target: x86_64-unknown-linux-musl
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          target: ${{ matrix.target }}
+      - uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-deb
+          version: latest
+      - uses: actions-rs/cargo@v1
+        with:
+          command: deb
+      - name: Upload Debian Package
+        uses: actions/upload-artifact@v3
+        with:
+          name: global_clone_${{ github.ref_name }}
+          path: target/debian/global_clone*.deb
+  
+  build_rpm:
+    needs: [test]
+    name: RPM Build (${{ matrix.os }})
+    if: ${{ github.event_name == "push" && github.ref.match(/^refs\/tags\/v.*/) }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            toolchain: stable
+            target: x86_64-unknown-linux-musl
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          target: ${{ matrix.target }}
+      - uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-rpm
+          version: latest
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rpm build
+      - name: Rename RPM Package
+        run: |
+          mv target/release/rpmbuild/RPMs/*.rpm global_clone_${{ github.ref_name }}_x86_64.rpm
+      - name: Upload RPM Package
+        uses: actions/upload-artifact@v3
+        with:
+          name: global_clone_${{ github.ref_name }}
+          path: global_clone_${{ github.ref_name }}_x86_64.rpm
+  
+  release:
+    needs: [build_unix, build_win, build_deb, build_rpm]
+    name: Release ( ${{ github.ref_name }} )
+    if: ${{ github.event_name == "push" && github.ref.match(/^refs\/tags\/v.*/) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: make temp dir
+        run: mkdir artifacts
+      # download the release tarballs
+      - name: download global_clone tarballs
+        uses: actions/download-artifact@v3
+        with:
+          name: global_clone_${{github.ref_name}}
+          path: artifacts
+      # Make github release
+      - name: Make github release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*

@@ -2,6 +2,13 @@
 name = "global_clone"
 version = "0.1.0"
 edition = "2021"
+description = "Global_clone is a tool for cloning a repository to templated paths"
+readme = "README.md"
+homepage = "https://github.com/natonathan/global_clone"
+repository = "https://github.com/natonathan/global_clone"
+license-file = "LICENSE"
+license = "MIT"
+author = "N,Tamez <nat@tamez.email>"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -18,3 +25,12 @@ dialoguer = "0.10.1"
 git2 = "0.14"
 regex = "1"
 clap_complete = "3.1.4"
+
+[package.metadata.rpm]
+package = "global_clone"
+
+[package.metadata.rpm.cargo]
+buildflags = ["--release"]
+
+[package.metadata.rpm.targets]
+global_clone = { path = "/usr/bin/global_clone" }
