@@ -70,9 +70,8 @@ jobs:
           cp README.md $ARTIFACTS_DIR/README.md
           cp LICENSE $ARTIFACTS_DIR/LICENSE
       - name: ad-hoc codesign if macos
-        if: ${{ matrix.os }} == macos-latest
-        run: |
-          codesign -s - $ARTIFACTS_DIR/global_clone
+        if: matrix.os == macos-latest
+        run: codesign -s - $ARTIFACTS_DIR/global_clone
       - name: Prepare Release Tarball
         run: tar czf ${{ matrix.target }}_${{ github.ref_name }}.tar.gz $ARTIFACTS_DIR
       - name: Upload Release Tarball
@@ -147,7 +146,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: global_clone_${{ github.ref_name }}
-          path: ${{ matrix.package_path }}/*
+          path: ${{ matrix.package_path }}
   
   release:
     needs: [build_unix, build_win, build_packages]
