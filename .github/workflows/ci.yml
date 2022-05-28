@@ -13,7 +13,7 @@ on:
 
 jobs:
   test:
-    name: Test (${{ matrix.os}})
+    name: Test (${{ matrix.os }})
     strategy:
       matrix:
         os: [ubuntu-20.04, ubuntu-22.04, windows-2022, macos-11, macos-12]
@@ -66,7 +66,7 @@ jobs:
           cp README.md artifacts/README.md
           cp LICENSE artifacts/LICENSE
       - name: Prepare Release Tarball
-        run: tar czf ${{ matrix.target }}_${{ github.ref_name }}.tar.gz target/release
+        run: tar czf ${{ matrix.target }}_${{ github.ref_name }}.tar.gz artifacts
       - name: Upload Release Tarball
         uses: actions/upload-artifact@v3
         with:
@@ -105,23 +105,31 @@ jobs:
           Copy-Item README.md artifacts/README.md
           Copy-Item LICENSE artifacts/LICENSE
       - name: Prepare Release Tarball
-        run: tar czf ${{ matrix.target }}_${{ github.ref_name }}.tar.gz target/release
+        run: tar czf ${{ matrix.target }}_${{ github.ref_name }}.tar.gz artifacts
       - name: Upload Release Tarball
         uses: actions/upload-artifact@v3
         with:
           name: global_clone_${{ github.ref_name }}
           path: ${{ matrix.target }}_${{ github.ref_name }}.tar.gz
 
-  build_deb:
+  build_packages:
     needs: [test]
-    name: Debian Build (${{ matrix.os }})
+    name: Build ${{ matrix.pm }}-${{ matrix.target }} Package
     if: startsWith(github.ref, 'refs/tags/v')
     strategy:
       matrix:
+        os: [ubuntu-latest]
+        toolchain: [stable]
+        target: [x86_64-unknown-linux-musl]
         include:
-          - os: ubuntu-latest
-            toolchain: stable
-            target: x86_64-unknown-linux-musl
+          - pm: Debian
+            pm_crate: cargo-deb
+            pm_build_cmd: cargo deb --output artifacts/deb/
+            package_path: artifacts/deb/
+          - pm: RPM
+            pm_crate: cargo-rpm
+            pm_build_cmd: cargo rpm build --output artifacts/rpm/
+            package_path: artifacts/rpm/
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -131,50 +139,18 @@ jobs:
           target: ${{ matrix.target }}
       - uses: actions-rs/install@v0.1
         with:
-          crate: cargo-deb
+          crate: ${{ matrix.pm_crate }}
           version: latest
-      - uses: actions-rs/cargo@v1
-        with:
-          command: deb
-      - name: Upload Debian Package
+          use-tool-cache: true
+      - run: ${{ matrix.pm_build_cmd }}
+      - name: Upload Package
         uses: actions/upload-artifact@v3
         with:
           name: global_clone_${{ github.ref_name }}
-          path: target/debian/global_clone*.deb
-  
-  build_rpm:
-    needs: [test]
-    name: RPM Build (${{ matrix.os }})
-    if: startsWith(github.ref, 'refs/tags/v') 
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            toolchain: stable
-            target: x86_64-unknown-linux-musl
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.toolchain }}
-          target: ${{ matrix.target }}
-      - uses: actions-rs/install@v0.1
-        with:
-          crate: cargo-rpm
-          version: latest
-      - run: cargo rpm build
-      - name: Rename RPM Package
-        run: |
-          mv target/release/rpmbuild/RPMs/*.rpm global_clone_${{ github.ref_name }}_x86_64.rpm
-      - name: Upload RPM Package
-        uses: actions/upload-artifact@v3
-        with:
-          name: global_clone_${{ github.ref_name }}
-          path: global_clone_${{ github.ref_name }}_x86_64.rpm
+          path: ${{ matrix.package_path }}/*
   
   release:
-    needs: [build_unix, build_win, build_deb, build_rpm]
+    needs: [build_unix, build_win, build_packages]
     name: Release ( ${{ github.ref_name }} )
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
