@@ -304,7 +304,7 @@ fn ssh_key_scan() -> String {
             }
         }
     }
-    if keys.len() > 0 {
+    if !keys.is_empty() {
         trace!("found keys: {:?}", keys);
         trace!("using key: {}", keys[0]);
         keys[0].clone().replace(".pub", "")
