@@ -29,7 +29,7 @@ pub fn command(args: CliArgs, mut config: crate::config::AppConfig) -> Result<()
       .unwrap_or(false) {
         trace!("Removed Template");
         config.templates.remove(&name);
-        crate::config::save_config(config);
+        crate::config::AppConfig::save_config(config);
   } else {
       trace!("Not removing template");
   }

@@ -1,0 +1,5 @@
+version = '0.1.0'
+default_template = 'default'
+
+[templates]
+default = '~/git/{provider}/{owner}/{repo}'

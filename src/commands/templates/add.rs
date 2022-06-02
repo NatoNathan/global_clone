@@ -36,7 +36,7 @@ pub fn command(args:CliArgs, mut config:crate::config::AppConfig ) -> Result<(),
       .unwrap_or(false) {
         trace!("Added new Template");
         config.templates.insert(name, template);
-        crate::config::save_config(config);
+        crate::config::AppConfig::save_config(config);
   } else {
       trace!("Not adding new template");
   }

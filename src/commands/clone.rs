@@ -37,7 +37,7 @@ pub struct CliArgs {
     branch: Option<String>,
 
     /// The template path the be used
-    #[clap(long, short, default_value_t = config::get_config().default_template)]
+    #[clap(long, short, default_value_t = AppConfig::get_config().default_template)]
     template: String,
 }
 

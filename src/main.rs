@@ -7,7 +7,7 @@ mod config;
 mod commands;
 
 use config::AppConfig;
-use commands::{templates, clone};
+use commands::{templates, clone, projects};
 
 /// A CLI Project to help keep Git Repos Organized
 /// 
@@ -60,6 +60,18 @@ enum Commands {
     /// Generate shell completion scripts for the CLI.
     #[clap(alias = "completion", about)]
     ShellCompletion(CompletionCliArgs),
+
+    /// Project Management Commands
+    /// 
+    /// Project management commands.
+    /// these commands are used to manage the projects.
+    /// they include:
+    /// - listing the projects,
+    /// - adding a new project,
+    /// - removing a project,
+    /// - moving a project,
+    #[clap(alias = "p", about)]
+    Projects(projects::ProjectCommandArgs),
 }
 
 #[derive(Debug, clap::Args, PartialEq)]
@@ -86,7 +98,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     pretty_env_logger::formatted_builder().filter_level(cli_args.verbose.log_level_filter()).init();
 
     trace!("loading config");
-    let cfg: AppConfig = config::get_config();
+    let cfg: AppConfig = AppConfig::get_config();
 
     trace!("running command");
     
@@ -94,5 +106,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Templates(a) => templates::command(a, cfg, cli_args.dry_run),
         Commands::Clone(a) => clone::command(a, cfg, cli_args.dry_run),
         Commands::ShellCompletion(a) => completion(a, cfg, cli_args.dry_run),
+        Commands::Projects(a) => a.command(cfg, cli_args.dry_run),
     }
 }
