@@ -1,10 +1,11 @@
 use clap::{Parser, Subcommand, Command, IntoApp};
 use clap_verbosity_flag::{Verbosity, InfoLevel};
-#[macro_use] extern crate prettytable;
+
 
 use log::{trace, info};
-mod config;
-mod commands;
+
+use global_clone::config;
+use global_clone::commands;
 
 use config::AppConfig;
 use commands::{templates, clone};
@@ -53,7 +54,7 @@ enum Commands {
     /// 
     /// see: `templates` command for more information.
     #[clap(alias = "c", about)]
-    Clone(clone::CliArgs),
+    Clone(clone::CloneCommand),
 
     /// Generate Shell completion Scripts
     /// 
@@ -92,7 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     match cli_args.command {
         Commands::Templates(a) => templates::command(a, cfg, cli_args.dry_run),
-        Commands::Clone(a) => clone::command(a, cfg, cli_args.dry_run),
+        Commands::Clone(a) => a.command(cfg, cli_args.dry_run),
         Commands::ShellCompletion(a) => completion(a, cfg, cli_args.dry_run),
     }
 }
