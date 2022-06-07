@@ -99,7 +99,7 @@ impl CloneOptions {
         let config = config::get_config();
         let repo_type = get_repo_type(&repo_path);
         let repo_meta = get_repo_meta(&repo_path, &repo_type);
-        let template_path = config.get_template(&template);
+        let template_path = config.get_template(template);
         let target_path = build_target_path(template_path.as_str(), &repo_meta);
         let ssh_key = ssh_key.unwrap_or_else(|| {
             warn!("no ssh key provided, using default");
