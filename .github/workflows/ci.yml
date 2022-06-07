@@ -27,9 +27,12 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
+          args: --all-features --bin gclone
+
       - uses: actions-rs/cargo@v1
         with:
-          command: test
+          command: test 
+          args: --all-features --bin gclone
   
   build_unix:
     # only run on a version tag
@@ -44,11 +47,11 @@ jobs:
           - os: ubuntu-latest
             toolchain: stable
             target: x86_64-unknown-linux-musl
-            file_name: global_clone_linux_amd64
+            file_name: gclone_linux_amd64
           - os: macos-latest
             toolchain: stable
             target: x86_64-apple-darwin
-            file_name: global_clone_macos_amd64
+            file_name: gclone_macos_amd64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -59,25 +62,25 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release
+          args: --release --features "cli logging" --bin gclone
       # prepare release artifacts
       - name: make temp dir
         run: |
           mkdir $ARTIFACTS_DIR
       - name: copy artifacts
         run: |
-          cp target/release/global_clone $ARTIFACTS_DIR/global_clone
+          cp target/release/gclone $ARTIFACTS_DIR/gclone
           cp README.md $ARTIFACTS_DIR/README.md
           cp LICENSE $ARTIFACTS_DIR/LICENSE
       - name: ad-hoc codesign if macos
         if: matrix.os == 'macos-latest'
-        run: codesign -s - $ARTIFACTS_DIR/global_clone
+        run: codesign -s - $ARTIFACTS_DIR/gclone
       - name: Prepare Release Tarball
         run: tar czf $ARTIFACTS_DIR.tar.gz $ARTIFACTS_DIR
       - name: Upload Release Tarball
         uses: actions/upload-artifact@v3
         with:
-          name: global_clone_${{ github.ref_name }}
+          name: gclone_${{ github.ref_name }}
           path: ${{ env.ARTIFACTS_DIR }}.tar.gz
 
   build_win:
@@ -101,12 +104,12 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release
+          args: --release --features "cli logging"
       - name: Upload Release exe
         uses: actions/upload-artifact@v3
         with:
-          name: global_clone_${{ github.ref_name }}
-          path: target/release/global_clone.exe
+          name: gclone_${{ github.ref_name }}
+          path: target/release/gclone.exe
 
   build_packages:
     needs: [test]
@@ -120,15 +123,15 @@ jobs:
             target: x86_64-unknown-linux-musl
             pm: Debian
             pm_crate: cargo-deb
-            pm_build_cmd: cargo deb --output artifacts/deb/global_clone_linux_amd64.deb
-            package_path: artifacts/deb/global_clone_linux_amd64.deb
+            pm_build_cmd: cargo deb --output artifacts/deb/gclone_linux_amd64.deb
+            package_path: artifacts/deb/gclone_linux_amd64.deb
           - os: ubuntu-latest
             toolchain: stable
             target: x86_64-unknown-linux-musl
             pm: RPM
             pm_crate: cargo-rpm
-            pm_build_cmd: cargo rpm build --output artifacts/rpm/global_clone_linux_amd64.rpm
-            package_path: artifacts/rpm/global_clone_linux_amd64.rpm
+            pm_build_cmd: cargo rpm build --output artifacts/rpm/gclone_linux_amd64.rpm
+            package_path: artifacts/rpm/gclone_linux_amd64.rpm
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -145,7 +148,7 @@ jobs:
       - name: Upload Package
         uses: actions/upload-artifact@v3
         with:
-          name: global_clone_${{ github.ref_name }}
+          name: gclone_${{ github.ref_name }}
           path: ${{ matrix.package_path }}
   
   release:
@@ -157,10 +160,10 @@ jobs:
       - name: make temp dir
         run: mkdir artifacts
       # download the release tarballs
-      - name: download global_clone tarballs
+      - name: download gclone tarballs
         uses: actions/download-artifact@v3
         with:
-          name: global_clone_${{github.ref_name}}
+          name: gclone_${{github.ref_name}}
           path: artifacts
       # Make github release
       - name: Make github release

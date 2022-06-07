@@ -6,7 +6,7 @@ Name: global_clone
 Summary: Global_clone is a tool for cloning a repository to templated paths
 Version: @@VERSION@@
 Release: @@RELEASE@@%{?dist}
-License: MIT License
+License: MIT
 Group: Applications/System
 Source0: %{name}-%{version}.tar.gz
 URL: https://github.com/natonathan/global_clone

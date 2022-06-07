@@ -1,41 +1,49 @@
-use log::trace;
+#[cfg(feature = "cli")]
+use super::CliCommand;
 
 mod add;
 mod list;
 mod remove;
 
+#[cfg(feature = "cli")]
 #[derive(Debug, clap::Args)]
 #[clap(args_conflicts_with_subcommands = true)]
-pub struct CliArgs {
+pub struct TemplatesCommand {
     #[clap(subcommand)]
-    command: Option<Commands>,
+    command: Option<TemplatesCommands>,
 }
 
+#[cfg(feature = "cli")]
 #[derive(Debug, clap::Subcommand)]
-enum Commands {
-
+enum TemplatesCommands {
     /// Add a new template to the list of templates
     #[clap(alias = "a")]
-    Add(add::CliArgs),
+    Add(add::AddCommand),
     /// Remove a template from the list of templates
     #[clap(alias = "r")]
-    Remove(remove::CliArgs),
+    Remove(remove::RemoveCommand),
 
     /// List all templates
     #[clap(alias = "ls")]
-    List,
+    List(list::ListCommand),
 }
 
-pub fn command(
-    args: CliArgs,
-    config: crate::config::AppConfig,
-    _dry_run: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let cmd = args.command.unwrap_or(Commands::List);
-    trace!("Templates");
-    match cmd {
-        Commands::List => list::command(config),
-        Commands::Add(add_args) => add::command(add_args, config),
-        Commands::Remove(remove_args) => remove::command(remove_args, config),
+
+#[cfg(feature = "cli")]
+impl CliCommand for TemplatesCommand {
+   fn command(
+        self,
+        config: crate::config::AppConfig,
+        dry_run: bool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let cmd = self.command.unwrap_or(TemplatesCommands::List(list::ListCommand {}));
+
+        crate::trace!("logging");
+
+        match cmd {
+            TemplatesCommands::List(a) => a.command(config, dry_run),
+            TemplatesCommands::Add(a) => a.command(config, dry_run),
+            TemplatesCommands::Remove(a) => a.command(config, dry_run),
+        }
     }
 }

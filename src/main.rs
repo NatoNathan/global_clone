@@ -1,19 +1,18 @@
 use clap::{Parser, Subcommand, Command, IntoApp};
 use clap_verbosity_flag::{Verbosity, InfoLevel};
-#[macro_use] extern crate prettytable;
+
+use global_clone::{
+    commands::{templates, clone, CliCommand},
+    config::{AppConfig, self},
+};
 
 use log::{trace, info};
-mod config;
-mod commands;
-
-use config::AppConfig;
-use commands::{templates, clone, projects};
 
 /// A CLI Project to help keep Git Repos Organized
 /// 
 /// This is a Simple CLI Project to help keep Git Repos Organized
 /// easily. The idea is to replace the `git clone` command,
-/// with a simple command line interface, that clones repositories to definded locations.
+/// with a simple command line interface, that clones repositories to defined locations.
 #[derive(Parser, Debug)]
 #[clap(author, version, about, trailing_var_arg = true)]
 #[clap(propagate_version = true)]
@@ -21,12 +20,17 @@ struct Cli {
     #[clap(flatten)]
     verbose: Verbosity<InfoLevel>,
 
-    #[clap(short, long)]
+    #[clap(short, long, global = true)]
     dry_run: bool,
+
+    // Flag to skip prompting for confirmation
+    #[clap(short, long, global = true)]
+    yes: bool,
     
     #[clap(subcommand)]
     command: Commands,
 }
+
 
 #[derive(Subcommand, Debug)]
 enum Commands {
@@ -44,7 +48,7 @@ enum Commands {
     /// 
     /// - `{repo}` - The name of the repo (ex: repo)
     #[clap(alias = "t", about)]
-    Templates(templates::CliArgs),
+    Templates(templates::TemplatesCommand),
     
     /// Clone a Git Repo
     /// 
@@ -53,7 +57,7 @@ enum Commands {
     /// 
     /// see: `templates` command for more information.
     #[clap(alias = "c", about)]
-    Clone(clone::CliArgs),
+    Clone(clone::CloneCommand),
 
     /// Generate Shell completion Scripts
     /// 
@@ -85,7 +89,7 @@ fn print_completion_script<G: clap_complete::Generator>(shell: G, cmd: &mut Comm
     clap_complete::generate(shell, cmd, cmd.get_name().to_string(), &mut std::io::stdout());
 }
 
-fn completion(args: CompletionCliArgs, _config: crate::config::AppConfig, _dry_run:bool) -> Result<(), Box<dyn std::error::Error>> {
+fn completion(args: CompletionCliArgs, _config: AppConfig, _dry_run:bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut cmd = crate::Cli::command();
   info!("Generating completion script for {}", args.shell);
   print_completion_script(args.shell, &mut cmd);
@@ -103,8 +107,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     trace!("running command");
     
     match cli_args.command {
-        Commands::Templates(a) => templates::command(a, cfg, cli_args.dry_run),
-        Commands::Clone(a) => clone::command(a, cfg, cli_args.dry_run),
+        Commands::Templates(a) => a.command(cfg, cli_args.dry_run),
+        Commands::Clone(a) => a.command(cfg, cli_args.dry_run),
         Commands::ShellCompletion(a) => completion(a, cfg, cli_args.dry_run),
         Commands::Projects(a) => a.command(cfg, cli_args.dry_run),
     }

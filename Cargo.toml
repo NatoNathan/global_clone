@@ -11,25 +11,44 @@ authors = ["N,Tamez <nat@tamez.email>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "gclone"
+path = "src/main.rs"
+required-features = ["cli", "logging"]
+
+
+[features]
+default = ["logging"]
+logging = ["dep:log", "dep:pretty_env_logger"]
+cli = ["dep:clap","dep:clap-verbosity-flag", "dep:clap_complete", "dep:prettytable-rs","dep:indicatif", "dep:dialoguer" ]
+
+
 [dependencies]
-confy = {version="0.4.0"}
-serde = {version = "1.0", features = ["derive"]}
-clap = { version = "3.0", features = ["derive"] }
-clap-verbosity-flag = "1.0.0"
-log = "0.4.17"
-pretty_env_logger = "0.4"
-prettytable-rs = "^0.8"
-indicatif = "0.16.2"
-dialoguer = "0.10.1"
-git2 = "0.14"
-regex = "1"
-clap_complete = "3.1.4"
+git2 = "0.14.4"
+regex = "1.5.6"
+confy = "0.4.0"
+serde = { version = "1.0.137", features = ["derive"] }
+clap = { version = "3.1.18", features = ["derive"], optional = true }
+clap-verbosity-flag = { version = "1.0.0", optional = true }
+clap_complete = { version = "3.1.4", optional = true }
+log = { version = "0.4.17", optional = true }
+pretty_env_logger = { version = "0.4.0", optional = true }
+prettytable-rs = { version = "0.8.0", optional = true }
+indicatif = { version = "0.16.2", optional = true }
+dialoguer = { version = "0.10.1", optional = true }
+
+[dev-dependencies]
+assert_cmd = "2.0.4"
+predicates = "2.1.1"
+
+[package.metadata.deb]
+features = ["cli", "logging"]
 
 [package.metadata.rpm]
-package = "global_clone"
+package = "gclone"
 
 [package.metadata.rpm.cargo]
-buildflags = ["--release"]
+buildflags = ["--release", "--features='cli logging'", "--bin gclone"]
 
 [package.metadata.rpm.targets]
-global_clone = { path = "/usr/bin/global_clone" }
+global_clone = { path = "/usr/bin/gclone" }
