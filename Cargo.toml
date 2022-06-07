@@ -48,7 +48,7 @@ features = ["cli", "logging"]
 package = "gclone"
 
 [package.metadata.rpm.cargo]
-buildflags = ["--release", "--features='cli logging'"]
+buildflags = ["--release", "--features='cli logging'", "--bin gclone"]
 
 [package.metadata.rpm.targets]
 global_clone = { path = "/usr/bin/gclone" }

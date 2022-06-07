@@ -27,12 +27,12 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --all-features
+          args: --all-features --bin gclone
 
       - uses: actions-rs/cargo@v1
         with:
           command: test 
-          args: --all-features
+          args: --all-features --bin gclone
   
   build_unix:
     # only run on a version tag
@@ -62,7 +62,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --features "cli logging"
+          args: --release --features "cli logging" --bin gclone
       # prepare release artifacts
       - name: make temp dir
         run: |
