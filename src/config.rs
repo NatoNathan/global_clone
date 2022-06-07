@@ -24,6 +24,11 @@ impl AppConfig {
   }
 
   pub fn get_template(&self, name: &str) -> String {
+    // if template name match template syntax, return name as is
+    if  (name.contains("{") && name.contains("}") )|| name.contains("/") {
+      return name.to_string();
+    }
+
     let template = self.templates.get(name);
     match template {
       Some(t) => t.to_string(),

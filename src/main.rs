@@ -20,8 +20,12 @@ struct Cli {
     #[clap(flatten)]
     verbose: Verbosity<InfoLevel>,
 
-    #[clap(short, long)]
+    #[clap(short, long, global = true)]
     dry_run: bool,
+
+    // Flag to skip prompting for confirmation
+    #[clap(short, long, global = true)]
+    yes: bool,
     
     #[clap(subcommand)]
     command: Commands,

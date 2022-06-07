@@ -17,3 +17,5 @@ Cargo.lock
 # VS Code
 .vscode/
 
+# Directory for used for testing purposes
+ci/

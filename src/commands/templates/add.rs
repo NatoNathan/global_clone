@@ -14,6 +14,14 @@ pub struct AddCommand {
     /// the template string
     #[clap(short, long, requires = "temp")]
     template: Option<String>,
+
+
+    // global flags
+    #[clap(from_global)]
+    yes: bool,
+
+    #[clap(from_global)]
+    dry_run: bool,
 }
 
 #[cfg(feature = "cli")]
@@ -44,7 +52,12 @@ impl CliCommand for AddCommand {
 
         crate::trace!("name:{}, template:{} provided", &name, &template);
 
-        if dialoguer::Confirm::new()
+        if args.dry_run {
+            crate::info!("Dry Run, not adding template");
+            return Ok(());
+        }
+
+        if args.yes || dialoguer::Confirm::new()
             .with_prompt(format!(
                 "You are about to add a new Template: name:{}, template:{}",
                 &name, &template
@@ -52,10 +65,10 @@ impl CliCommand for AddCommand {
             .interact()
             .unwrap_or(false)
         {
-            crate::trace!("Added new Template");
+            crate::info!("Added new Template");
             config.add_template(&name, &template);
         } else {
-            crate::trace!("Not adding new template");
+            crate::info!("Not adding new template");
         }
         Ok(())
     }

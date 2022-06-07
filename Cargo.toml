@@ -12,7 +12,7 @@ authors = ["N,Tamez <nat@tamez.email>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
-name = "global_clone"
+name = "gclone"
 path = "src/main.rs"
 required-features = ["cli", "logging"]
 
@@ -36,6 +36,10 @@ pretty_env_logger = { version = "0.4.0", optional = true }
 prettytable-rs = { version = "0.8.0", optional = true }
 indicatif = { version = "0.16.2", optional = true }
 dialoguer = { version = "0.10.1", optional = true }
+
+[dev-dependencies]
+assert_cmd = "2.0.4"
+predicates = "2.1.1"
 
 [package.metadata.rpm]
 package = "global_clone"
