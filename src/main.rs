@@ -12,7 +12,7 @@ use log::{trace, info};
 /// 
 /// This is a Simple CLI Project to help keep Git Repos Organized
 /// easily. The idea is to replace the `git clone` command,
-/// with a simple command line interface, that clones repositories to definded locations.
+/// with a simple command line interface, that clones repositories to defined locations.
 #[derive(Parser, Debug)]
 #[clap(author, version, about, trailing_var_arg = true)]
 #[clap(propagate_version = true)]
