@@ -11,23 +11,16 @@ authors = ["N,Tamez <nat@tamez.email>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-crate-type = ["cdylib"]
-name = "global_clone"
-path = "src/lib.rs"
-
-
-
 [[bin]]
-name = "global-clone"
+name = "global_clone"
 path = "src/main.rs"
 required-features = ["cli", "logging"]
 
 
 [features]
+default = ["logging"]
 logging = ["dep:log", "dep:pretty_env_logger"]
-clap=["dep:clap","dep:clap-verbosity-flag", "dep:clap_complete"]
-cli =["clap", "dep:prettytable-rs","dep:indicatif", "dep:dialoguer" ]
+cli = ["dep:clap","dep:clap-verbosity-flag", "dep:clap_complete", "dep:prettytable-rs","dep:indicatif", "dep:dialoguer" ]
 
 
 [dependencies]

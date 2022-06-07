@@ -1,21 +1,16 @@
 use crate::config;
-use config::AppConfig;
+use crate::{info, warn, trace};
 
 #[cfg(feature = "cli")] 
-use {clap::Args,
- indicatif::ProgressBar,
+use {
+    clap::Args,
+    indicatif::ProgressBar,
+    crate::{config::AppConfig, commands::CliCommand},
 };
 
-#[cfg(feature = "logging")]
-use log::{debug, error, info, trace, warn};
-
 use git2::{Cred, RemoteCallbacks};
-use std::env;
-use std::path::Path;
+use std::{env, path::Path};
 use regex::Regex;
-
-#[cfg(feature = "cli")]
-use super::CloneCommand;
 
 enum RepoType {
     Http,
@@ -62,7 +57,8 @@ pub struct CloneCommand {
 
 #[cfg(feature = "cli")]
 impl CliCommand for CloneCommand {
-    fn command(args: Self, config: AppConfig, dry_run: bool) -> Result<(), Box<dyn std::error::Error>> {
+    fn command(self, _config: AppConfig, dry_run: bool) -> Result<(), Box<dyn std::error::Error>> {
+        let args = self;
 
         let clone_options = CloneOptions::new(args.repo, &args.template, args.branch, args.ssh, Some(args.ssh_key), args.ssh_username, args.ssh_password);
         if dry_run {
@@ -86,7 +82,7 @@ struct CloneOptions {
     branch: Option<String>,
     ssh: bool,
     ssh_key: String,
-    ssh_username: Option<String>,
+    _ssh_username: Option<String>,
     ssh_password: Option<String>,
 }
 
@@ -103,21 +99,21 @@ impl CloneOptions {
         let config = config::get_config();
         let repo_type = get_repo_type(&repo_path);
         let repo_meta = get_repo_meta(&repo_path, &repo_type);
-        let template_path = *config.templates.get(template).unwrap_or_else(|| config.templates.get(&config.default_template).unwrap());
+        let template_path = config.get_template(&template);
         let target_path = build_target_path(template_path.as_str(), &repo_meta);
         let ssh_key = ssh_key.unwrap_or_else(|| {
-            #[cfg(feature = "logging")]
-            warn!("ssh key not provided, using default");
+            warn!("no ssh key provided, using default");
             get_default_ssh_key_path()
         });
+        let repo = build_repo_path(&repo_path, &repo_type, &ssh, &repo_meta, ssh_username.clone());
         Self {
-            repo_path,
+            repo_path: repo,
             repo_type,
             target_path,
             branch,
             ssh,
             ssh_key,
-            ssh_username,
+            _ssh_username: ssh_username,
             ssh_password,
         }
     }
@@ -164,7 +160,7 @@ impl CloneOptions {
         builder.fetch_options(fo);
     
         if options.branch.is_some() {
-            builder.branch(options.branch.unwrap().as_str());
+            builder.branch(options.branch.as_ref().unwrap().as_str());
         }
         builder.clone(options.repo_path.as_str(), Path::new(options.target_path.as_str()))?;
         

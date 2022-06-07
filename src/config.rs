@@ -18,6 +18,33 @@ impl std::default::Default for AppConfig {
   }
 }
 
+impl AppConfig {
+  pub fn get_default_template(&self) -> String {
+    self.templates.get(&self.default_template).unwrap().to_string()
+  }
+
+  pub fn get_template(&self, name: &str) -> String {
+    let template = self.templates.get(name);
+    match template {
+      Some(t) => t.to_string(),
+      None => self.get_default_template(),
+    }
+  }
+
+  pub fn set_default_template(&mut self, name: &str) {
+    self.default_template = name.to_string();
+  }
+
+  pub fn add_template(&mut self, name: &str, template: &str) {
+    self.templates.insert(name.to_string(), template.to_string());
+  }
+
+  pub fn remove_template(&mut self, name: &str) {
+    self.templates.remove(name);
+  }
+    
+}
+
 #[cfg(target_family = "unix")]
 fn get_default_template() -> String {
   "~/git/{provider}/{owner}/{repo}".into()
