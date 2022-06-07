@@ -41,11 +41,14 @@ dialoguer = { version = "0.10.1", optional = true }
 assert_cmd = "2.0.4"
 predicates = "2.1.1"
 
+[package.metadata.deb]
+features = ["cli", "logging"]
+
 [package.metadata.rpm]
-package = "global_clone"
+package = "gclone"
 
 [package.metadata.rpm.cargo]
-buildflags = ["--release"]
+buildflags = ["--release", "--features='cli logging'"]
 
 [package.metadata.rpm.targets]
-global_clone = { path = "/usr/bin/global_clone" }
+global_clone = { path = "/usr/bin/gclone" }
