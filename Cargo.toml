@@ -24,7 +24,7 @@ cli = ["dep:clap","dep:clap-verbosity-flag", "dep:clap_complete", "dep:prettytab
 
 
 [dependencies]
-git2 = "0.14.4"
+git2 = "0.16.1"
 regex = "1.5.6"
 confy = "0.4.0"
 serde = { version = "1.0.137", features = ["derive"] }
